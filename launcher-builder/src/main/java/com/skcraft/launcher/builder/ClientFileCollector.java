@@ -9,14 +9,18 @@ package com.skcraft.launcher.builder;
 import com.google.common.hash.HashFunction;
 import com.google.common.hash.Hashing;
 import com.google.common.io.Files;
+import com.google.gson.Gson;
+import com.google.gson.GsonBuilder;
 import com.skcraft.launcher.model.modpack.FileInstall;
 import com.skcraft.launcher.model.modpack.Manifest;
 import lombok.NonNull;
 import lombok.extern.java.Log;
+import org.apache.commons.io.FileUtils;
 import org.apache.commons.io.FilenameUtils;
 
 import java.io.File;
 import java.io.IOException;
+import java.net.URL;
 import java.nio.charset.Charset;
 
 /**
@@ -58,26 +62,60 @@ public class ClientFileCollector extends DirectoryWalker {
             return;
         }
 
+        String hash;
+        String to;
+        boolean copy = false;
+        String location = "";
         FileInstall entry = new FileInstall();
-        String hash = Files.hash(file, hf).toString();
-        String to = FilenameUtils.separatorsToUnix(FilenameUtils.normalize(relPath));
-        
-        // url.txt override file
-        File urlFile = new File(file.getAbsoluteFile().getParentFile(), file.getName() + URL_FILE_SUFFIX);
-        String location;
-        boolean copy = true;
-        if (urlFile.exists() && !System.getProperty("com.skcraft.builder.ignoreURLOverrides", "false").equalsIgnoreCase("true")) {
-            location = Files.readFirstLine(urlFile, Charset.defaultCharset());
-            copy = false;
-        } else {
-            location = hash.substring(0, 2) + "/" + hash.substring(2, 4) + "/" + hash;
+
+        if (file.getName().endsWith(".url")){
+            String name = FilenameUtils.getBaseName(file.getName());
+            URL url = new URL(FileUtils.readFileToString(file, "UTF-8"));
+            file.delete();
+            File filetmp = File.createTempFile("temp",".jar");
+            FileUtils.copyURLToFile(url, filetmp);
+            Gson gson = new GsonBuilder().create();
+            HashObject h = new HashObject();
+            hash = Files.hash(filetmp, hf).toString();
+            h.setHash(hash);
+            h.setLocation(hash.substring(0, 2) + "/" + hash.substring(2, 4) + "/" + hash);
+            h.setTo(FilenameUtils.separatorsToUnix(FilenameUtils.normalize(relPath)));
+            h.setSize(file.length());
+            file = new File(name + ".json");
+            filetmp.delete();
+            FileUtils.writeStringToFile(file , gson.toJson(h), "UTF-8");
         }
-        
+
+        if (file.getName().endsWith(".jar")) {
+
+            hash = Files.hash(file, hf).toString();
+            to = FilenameUtils.separatorsToUnix(FilenameUtils.normalize(relPath));
+
+            // url.txt override file
+            File urlFile = new File(file.getAbsoluteFile().getParentFile(), file.getName() + URL_FILE_SUFFIX);
+            copy = true;
+            if (urlFile.exists() && !System.getProperty("ignoreURLOverridescom.skcraft.builder.", "false").equalsIgnoreCase("true")) {
+                location = Files.readFirstLine(urlFile, Charset.defaultCharset());
+                copy = false;
+            } else {
+                location = hash.substring(0, 2) + "/" + hash.substring(2, 4) + "/" + hash;
+            }
+            entry.setHash(hash);
+            entry.setLocation(location);
+            entry.setTo(to);
+            entry.setSize(file.length());
+        }
+
+        if (file.getName().endsWith(".json")){
+            Gson gson = new GsonBuilder().create();
+            HashObject h = gson.fromJson(FileUtils.readFileToString(file,"UTF-8"), HashObject.class);
+            entry.setHash(h.getHash());
+            entry.setLocation(h.getLocation());
+            entry.setTo(h.getTo());
+            entry.setSize(h.getSize());
+        }
         File destPath = new File(destDir, location);
-        entry.setHash(hash);
-        entry.setLocation(location);
-        entry.setTo(to);
-        entry.setSize(file.length());
+
         applicator.apply(entry);
         destPath.getParentFile().mkdirs();
         ClientFileCollector.log.info(String.format("Adding %s from %s...", relPath, file.getAbsolutePath()));
