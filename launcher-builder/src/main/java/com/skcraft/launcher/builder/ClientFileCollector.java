@@ -36,6 +36,7 @@ public class ClientFileCollector extends DirectoryWalker {
     private final PropertiesApplicator applicator;
     private final File destDir;
     private HashFunction hf = Hashing.sha1();
+    private Gson gson = new GsonBuilder().create();
 
     /**
      * Create a new collector.
@@ -74,7 +75,6 @@ public class ClientFileCollector extends DirectoryWalker {
             file.delete();
             File filetmp = File.createTempFile("temp",".jar");
             FileUtils.copyURLToFile(url, filetmp);
-            Gson gson = new GsonBuilder().create();
             HashObject h = new HashObject();
             hash = Files.hash(filetmp, hf).toString();
             h.setHash(hash);
@@ -107,7 +107,6 @@ public class ClientFileCollector extends DirectoryWalker {
         }
 
         if (file.getName().endsWith(".json")){
-            Gson gson = new GsonBuilder().create();
             HashObject h = gson.fromJson(FileUtils.readFileToString(file,"UTF-8"), HashObject.class);
             entry.setHash(h.getHash());
             entry.setLocation(h.getLocation());
