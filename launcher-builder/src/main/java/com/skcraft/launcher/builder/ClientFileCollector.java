@@ -69,6 +69,7 @@ public class ClientFileCollector extends DirectoryWalker {
         String location = "";
         FileInstall entry = new FileInstall();
 
+        // .url file handling
         if (file.getName().endsWith(".url")){
             String name = FilenameUtils.getBaseName(file.getName());
             URL url = new URL(FileUtils.readLines(file, "UTF-8").get(1));
@@ -92,6 +93,7 @@ public class ClientFileCollector extends DirectoryWalker {
             FileUtils.writeStringToFile(file , gson.toJson(h), "UTF-8");
         }
 
+        // .jar file handling
         if (file.getName().endsWith(".jar")) {
 
             hash = Files.hash(file, hf).toString();
@@ -110,8 +112,8 @@ public class ClientFileCollector extends DirectoryWalker {
             entry.setLocation(location);
             entry.setTo(to);
             entry.setSize(file.length());
-        }
 
+        // .json file handling
         if (file.getName().endsWith(".json")){
             HashObject h = gson.fromJson(FileUtils.readFileToString(file,"UTF-8"), HashObject.class);
             entry.setHash(h.getHash());

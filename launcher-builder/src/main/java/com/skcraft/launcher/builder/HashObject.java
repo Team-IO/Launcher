@@ -1,5 +1,9 @@
 package com.skcraft.launcher.builder;
 
+
+/**
+ * Stores all the data for a mod (json object)
+ */
 class HashObject {
     private  String Hash;
     private  String Location;
