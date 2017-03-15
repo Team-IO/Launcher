@@ -70,13 +70,13 @@ public class ClientFileCollector extends DirectoryWalker {
         FileInstall entry = new FileInstall();
 
         // .url file handling
-        if (file.getName().endsWith(".url")){
+        if (file.getName().endsWith(".url")) {
             String name = FilenameUtils.getBaseName(file.getName());
             URL url = new URL(FileUtils.readLines(file, "UTF-8").get(1));
-            File filetmp = File.createTempFile("temp",".jar");
+            File filetmp = File.createTempFile("temp", ".jar");
             try {
                 FileUtils.copyURLToFile(url, filetmp);
-            }catch (IOException e){
+            } catch (IOException e) {
                 filetmp.delete();
                 File failedFile = new File(file.getAbsolutePath() + File.pathSeparator + "FAILED" + file.getName());
                 FileUtils.moveFileToDirectory(file, failedFile, true);
@@ -90,7 +90,7 @@ public class ClientFileCollector extends DirectoryWalker {
             h.setSize(file.length());
             file = new File(name + ".json");
             filetmp.delete();
-            FileUtils.writeStringToFile(file , gson.toJson(h), "UTF-8");
+            FileUtils.writeStringToFile(file, gson.toJson(h), "UTF-8");
         }
 
         // .jar file handling
@@ -113,23 +113,24 @@ public class ClientFileCollector extends DirectoryWalker {
             entry.setTo(to);
             entry.setSize(file.length());
 
-        // .json file handling
-        if (file.getName().endsWith(".json")){
-            HashObject h = gson.fromJson(FileUtils.readFileToString(file,"UTF-8"), HashObject.class);
-            entry.setHash(h.getHash());
-            entry.setLocation(h.getLocation());
-            entry.setTo(h.getTo());
-            entry.setSize(h.getSize());
-        }
-        File destPath = new File(destDir, location);
+            // .json file handling
+            if (file.getName().endsWith(".json")) {
+                HashObject h = gson.fromJson(FileUtils.readFileToString(file, "UTF-8"), HashObject.class);
+                entry.setHash(h.getHash());
+                entry.setLocation(h.getLocation());
+                entry.setTo(h.getTo());
+                entry.setSize(h.getSize());
+            }
+            File destPath = new File(destDir, location);
 
-        applicator.apply(entry);
-        destPath.getParentFile().mkdirs();
-        ClientFileCollector.log.info(String.format("Adding %s from %s...", relPath, file.getAbsolutePath()));
-        if (copy) {
-            Files.copy(file, destPath);
+            applicator.apply(entry);
+            destPath.getParentFile().mkdirs();
+            ClientFileCollector.log.info(String.format("Adding %s from %s...", relPath, file.getAbsolutePath()));
+            if (copy) {
+                Files.copy(file, destPath);
+            }
+            manifest.getTasks().add(entry);
         }
-        manifest.getTasks().add(entry);
     }
 
     public static DirectoryBehavior getDirectoryBehavior(@NonNull String name) {
