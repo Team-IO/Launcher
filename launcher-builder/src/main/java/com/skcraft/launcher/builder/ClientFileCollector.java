@@ -71,14 +71,19 @@ public class ClientFileCollector extends DirectoryWalker {
 
         if (file.getName().endsWith(".url")){
             String name = FilenameUtils.getBaseName(file.getName());
-            URL url = new URL(FileUtils.readFileToString(file, "UTF-8"));
-            file.delete();
+            URL url = new URL(FileUtils.readLines(file, "UTF-8").get(1));
             File filetmp = File.createTempFile("temp",".jar");
-            FileUtils.copyURLToFile(url, filetmp);
+            try {
+                FileUtils.copyURLToFile(url, filetmp);q
+            }catch (IOException e){
+                File failedFile = new File(file.getAbsolutePath() + File.pathSeparator + "FAILED" + file.getName());
+                FileUtils.moveFileToDirectory(file, failedFile, true);
+                return;
+            }
             HashObject h = new HashObject();
             hash = Files.hash(filetmp, hf).toString();
             h.setHash(hash);
-            h.setLocation(hash.substring(0, 2) + "/" + hash.substring(2, 4) + "/" + hash);
+            h.setLocation(url.toString());
             h.setTo(FilenameUtils.separatorsToUnix(FilenameUtils.normalize(relPath)));
             h.setSize(file.length());
             file = new File(name + ".json");
