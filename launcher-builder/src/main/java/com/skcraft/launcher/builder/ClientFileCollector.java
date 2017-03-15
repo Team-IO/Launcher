@@ -74,8 +74,9 @@ public class ClientFileCollector extends DirectoryWalker {
             URL url = new URL(FileUtils.readLines(file, "UTF-8").get(1));
             File filetmp = File.createTempFile("temp",".jar");
             try {
-                FileUtils.copyURLToFile(url, filetmp);q
+                FileUtils.copyURLToFile(url, filetmp);
             }catch (IOException e){
+                filetmp.delete();
                 File failedFile = new File(file.getAbsolutePath() + File.pathSeparator + "FAILED" + file.getName());
                 FileUtils.moveFileToDirectory(file, failedFile, true);
                 return;
