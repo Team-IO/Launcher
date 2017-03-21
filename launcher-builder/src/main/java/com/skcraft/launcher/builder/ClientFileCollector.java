@@ -72,14 +72,15 @@ public class ClientFileCollector extends DirectoryWalker {
         // .url file handling
         if (file.getName().endsWith(".url")) {
             String name = FilenameUtils.getBaseName(file.getName());
-            URL url = new URL(FileUtils.readLines(file, "UTF-8").get(1));
+            URL url = new URL(FileUtils.readLines(file, "UTF-8").get(0));
             File filetmp = File.createTempFile("temp", ".jar");
             try {
                 FileUtils.copyURLToFile(url, filetmp);
             } catch (IOException e) {
                 filetmp.delete();
-                File failedFile = new File(file.getAbsolutePath() + File.pathSeparator + "FAILED" + file.getName());
-                FileUtils.moveFileToDirectory(file, failedFile, true);
+                File failedFile = new File(file.getAbsolutePath().replace(file.getName(), "") + File.separator + "FAILED");
+                FileUtils.moveToDirectory(file, failedFile, true);
+                System.out.print(true);
                 return;
             }
             HashObject h = new HashObject();
