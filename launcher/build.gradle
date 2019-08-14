@@ -13,7 +13,7 @@ dependencies {
     compile 'commons-lang:commons-lang:2.6'
     compile 'commons-io:commons-io:2.5'
     compile 'com.google.guava:guava:15.0'
-    compile 'com.beust:jcommander:1.32'
+    compile 'com.beust:jcommander:1.75'
     compile 'com.miglayout:miglayout:3.7.4'
     compile 'com.google.code.findbugs:jsr305:3.0.0'
 }
